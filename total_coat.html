@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Body Extreme Cars Detailing | Total Coat Costa Rica</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --negro: #0A0A0A;
+      --gris-oscuro: #141414;
+      --gris-medio: #1E1E1E;
+      --naranja: #FF6B1A;
+      --naranja-oscuro: #CC4F0A;
+      --blanco: #FFFFFF;
+      --gris-texto: #AAAAAA;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--negro);
+      color: var(--blanco);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #1E1E1E;
+    }
+
+    .nav-logo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--blanco);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--naranja); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { color: var(--gris-texto); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--blanco); }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 8rem 2rem 4rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: var(--naranja);
+      color: var(--negro);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      padding: 0.3rem 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 800;
+      line-height: 1;
+      color: var(--blanco);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 em { font-style: normal; color: var(--naranja); }
+
+    .hero p { color: var(--gris-texto); font-size: 1.1rem; max-width: 520px; margin-bottom: 2.5rem; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--naranja);
+      color: var(--negro);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.9rem 2rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: var(--naranja-oscuro); color: var(--blanco); }
+
+    section { max-width: 1100px; margin: 0 auto; padding: 5rem 2rem; }
+
+    .seccion-titulo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .seccion-linea { width: 48px; height: 3px; background: var(--naranja); margin-bottom: 3rem; }
+
+    .servicios-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+
+    .servicio-card { background: var(--gris-medio); padding: 2rem; border-left: 3px solid var(--naranja); }
+    .servicio-card h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .servicio-card p { color: var(--gris-texto); font-size: 0.95rem; }
+
+    #galeria { background: var(--gris-oscuro); }
+    .galeria-wrapper { max-width: 1100px; margin: 0 auto; padding: 5rem 2rem; }
+
+    .galeria-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+
+    .trabajo-card { background: var(--gris-medio); overflow: hidden; }
+    .trabajo-card img { width: 100%; height: 220px; object-fit: cover; display: block; transition: transform 0.3s; }
+    .trabajo-card:hover img { transform: scale(1.04); }
+    .trabajo-info { padding: 1rem 1.2rem; }
+    .trabajo-info p { font-size: 0.9rem; color: var(--gris-texto); margin-bottom: 0.5rem; }
+    .trabajo-tipo { font-size: 0.75rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; color: var(--naranja); letter-spacing: 0.08em; }
+
+    .contacto-content { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+    .contacto-texto h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
+    .contacto-texto p { color: var(--gris-texto); margin-bottom: 2rem; }
+
+    .btn-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #25D366;
+      color: var(--negro);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.9rem 2rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-whatsapp:hover { background: #1da851; }
+
+    .contacto-info { display: flex; flex-direction: column; gap: 1.5rem; }
+    .info-item { border-left: 2px solid var(--naranja); padding-left: 1rem; }
+    .info-item span { display: block; font-size: 0.8rem; color: var(--gris-texto); margin-bottom: 0.2rem; }
+    .info-item strong { font-size: 1rem; }
+
+    footer { background: var(--gris-oscuro); border-top: 1px solid #1E1E1E; padding: 2rem; text-align: center; }
+    footer p { color: var(--gris-texto); font-size: 0.85rem; }
+    footer a { color: var(--naranja); text-decoration: none; }
+
+    #admin-section {
+      display: none;
+      background: var(--gris-oscuro);
+      border-top: 2px solid var(--naranja);
+    }
+
+    .admin-wrapper { max-width: 600px; margin: 0 auto; padding: 3rem 2rem; }
+    .admin-wrapper h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 2rem; }
+
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--gris-texto); margin-bottom: 0.4rem; }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: var(--gris-medio);
+      border: 1px solid #333;
+      color: var(--blanco);
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--naranja); }
+
+    .form-group textarea { height: 100px; resize: vertical; }
+
+    .btn-admin {
+      background: var(--naranja);
+      color: var(--negro);
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.85rem 2rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-admin:hover { background: var(--naranja-oscuro); color: var(--blanco); }
+
+    #upload-status { margin-top: 1rem; font-size: 0.9rem; }
+    #login-error { color: #ff4444; font-size: 0.85rem; margin-top: 0.5rem; }
+
+    #btn-admin-toggle {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--gris-medio);
+      color: var(--gris-texto);
+      border: 1px solid #333;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.8rem;
+      cursor: pointer;
+      z-index: 200;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #btn-logout {
+      display: none;
+      background: transparent;
+      color: var(--gris-texto);
+      border: 1px solid #333;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .contacto-content { grid-template-columns: 1fr; gap: 2rem; }
+      .hero { padding: 7rem 1.5rem 3rem; }
+    }
+  </style>
+</head>
+<!-- Botones Barra superior Inicio, Contact Etc Etc -->
+<body>
+
+  <nav>
+    <a href="#" class="nav-logo">TOTAL<span>COAT</span></a>
+    <ul class="nav-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#galeria">Trabajos</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <button id="btn-logout">Cerrar sesión</button>
+  </nav>
+
+  <div class="hero">
+    <span class="hero-tag">COSTA RICA · DETAILING PROFESIONAL</span>
+    <h1>Tu auto merece<br><em>el mejor cuidado.</em></h1>
+    <p>Somos expertos en detailing automotriz y recubrimientos plásticos. Resultados que hablan por sí solos.</p>
+    <a href="https://wa.me/50688121257" class="btn-primary" target="_blank">Solicitar presupuesto</a>
+  </div>
+
+  <section id="servicios">
+    <h2 class="seccion-titulo">Nuestros servicios</h2>
+    <div class="seccion-linea"></div>
+    <div class="servicios-grid">
+      <div class="servicio-card">
+        <h3>Detailing completo</h3>
+        <p>Limpieza profunda exterior e interior. Cada rincón de tu auto tratado con los mejores productos.</p>
+      </div>
+      <div class="servicio-card">
+        <h3>Recubrimientos plásticos</h3>
+        <p>Protección duradera con Total Coat. Recubrimiento que resiste el tiempo, la lluvia y el sol.</p>
+      </div>
+      <div class="servicio-card">
+        <h3>Pulido y encerado</h3>
+        <p>Eliminamos rayones y oxidación. Tu auto sale con un brillo como el primer día.</p>
+      </div>
+      <div class="servicio-card">
+        <h3>Protección de pintura</h3>
+        <p>Sellamos y protegemos la pintura original. El mejor seguro para mantener el valor de tu vehículo.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="galeria">
+    <div class="galeria-wrapper">
+      <h2 class="seccion-titulo">Trabajos realizados</h2>
+      <div class="seccion-linea"></div>
+      <div class="galeria-grid" id="galeria-grid"></div>
+    </div>
+  </div>
+<!-- Contact Boxes Donde se contiene toda la información y URLs de contacto de la empresa -->
+  <section id="contacto">
+    <div class="contacto-content">
+      <div class="contacto-texto">
+        <h2>¿Listo para transformar tu auto?</h2>
+        <p>Escribinos por WhatsApp y cotizá con nosotros. ¡Será un gusto atenderle!</p>
+        <a href="https://wa.me/50688121257" class="btn-whatsapp" target="_blank">Escribenos por WhatsApp</a>
+      </div>
+      <div class="contacto-info">
+        <div class="info-item"><span>Ubicación</span><strong><a hreef=""> Santa Ana, Lindora, San José, Costa Rica</a></strong></div>
+        <div class="info-item"><span>WhatsApp</span><strong><a href="https://wa.me/50688121257">+506 8812-1257</a></strong></div>
+        <div class="info-item"><span>Instagram</span><strong><a href="https://www.instagram.com/totalcoatcr/">@totalcoatcr</a></strong></div>
+        <div class="info-item"><span>Horario</span><strong>Lunes a sábado · 8am – 6pm</strong></div>
+        <div class="info-item"><span>Correo Electrónico</span><strong><a href="mailto:info@totalcoatcr.com" >info@totalcoatcr.com</a></strong></div>
+      </div>
+    </div>
+  </section>
+<!-- Footer Page Settings -->
+  <footer>
+    <p>© 2026 Body Extreme Cars Detailing · Total Coat Costa Rica · Instagram <a href="https://www.instagram.com/totalcoatcr/">@totalcoatcr</a></p>
+  </footer>
+<!-- PANEL DE CREDENIALES DE ADMINISTRACÓN -->
+  <div id="admin-section">
+    <div class="admin-wrapper">
+      <h2>Panel de administración</h2>
+      <div id="login-panel">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="admin-email" placeholder="correo@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="admin-password" placeholder="••••••••" />
+        </div>
+        <button class="btn-admin" id="btn-login">Entrar</button>
+        <p id="login-error"></p>
+      </div>
+      <div id="admin-panel" style="display:none">
+        <div class="form-group">
+          <label>Foto del trabajo</label>
+          <input type="file" id="upload-foto" accept="image/*" />
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="upload-descripcion" placeholder="Ej: Detailing completo, espejo exterior, protección UV..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tipo de servicio</label>
+          <select id="upload-tipo">
+            <option value="Detailing">Detailing</option>
+            <option value="Recubrimiento">Recubrimiento plástico</option>
+            <option value="Pulido">Pulido y encerado</option>
+            <option value="Protección">Protección de pintura</option>
+          </select>
+        </div>
+        <button class="btn-admin" id="btn-subir">Publicar trabajo</button>
+        <p id="upload-status"></p>
+      </div>
+    </div>
+  </div>
+
+  <button id="btn-admin-toggle">Admin</button>
+
+  <!-- Firebase SDK al final del body: AQUÍ SÍ EXISTEN LOS ELEMENTOS HTML -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX9awo-Qike7jB1sLH55C3zxTfQ3CXprM",
+      authDomain: "total-coat-website.firebaseapp.com",
+      projectId: "total-coat-website",
+      storageBucket: "total-coat-website.firebasestorage.app",
+      messagingSenderId: "695173299647",
+      appId: "1:695173299647:web:7ac902b0e55bac0b9cf50a",
+      measurementId: "G-N2WJDK00RM"
+    };
+
+    const CLOUDINARY_CLOUD_NAME = "blagc6d0";
+    const CLOUDINARY_UPLOAD_PRESET = "total_coat_preset";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // CARGAR TRABAJOS
+    async function cargarTrabajos() {
+      const galeria = document.getElementById("galeria-grid");
+      galeria.innerHTML = "<p style='color:#aaa;grid-column:1/-1;text-align:center'>Cargando trabajos...</p>";
+      try {
+        const snapshot = await getDocs(collection(db, "trabajos"));
+        if (snapshot.empty) {
+          galeria.innerHTML = "<p style='color:#aaa;grid-column:1/-1;text-align:center'>Aún no hay trabajos publicados.</p>";
+          return;
+        }
+        galeria.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement("div");
+          card.className = "trabajo-card";
+          card.innerHTML = `
+            <img src="${data.imagenUrl}" alt="${data.descripcion}" loading="lazy" />
+            <div class="trabajo-info">
+              <p>${data.descripcion}</p>
+              <span class="trabajo-tipo">${data.tipo || "Detailing"}</span>
+            </div>
+          `;
+          galeria.appendChild(card);
+        });
+      } catch (e) {
+        galeria.innerHTML = "<p style='color:#aaa;grid-column:1/-1;text-align:center'>Error cargando trabajos.</p>";
+        console.error(e);
+      }
+    }
+
+    // AUTH
+    onAuthStateChanged(auth, user => {
+      const adminPanel = document.getElementById("admin-panel");
+      const loginPanel = document.getElementById("login-panel");
+      const btnLogout = document.getElementById("btn-logout");
+      if (user) {
+        loginPanel.style.display = "none";
+        adminPanel.style.display = "block";
+        btnLogout.style.display = "inline-block";
+      } else {
+        loginPanel.style.display = "block";
+        adminPanel.style.display = "none";
+        btnLogout.style.display = "none";
+      }
+    });
+
+    document.getElementById("btn-login").addEventListener("click", async () => {
+      const email = document.getElementById("admin-email").value;
+      const password = document.getElementById("admin-password").value;
+      const error = document.getElementById("login-error");
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        error.textContent = "";
+      } catch (e) {
+        error.textContent = "Email o contraseña incorrectos.";
+      }
+    });
+
+    document.getElementById("btn-logout").addEventListener("click", () => signOut(auth));
+
+    // SUBIR TRABAJO
+    document.getElementById("btn-subir").addEventListener("click", async () => {
+      const archivo = document.getElementById("upload-foto").files[0];
+      const descripcion = document.getElementById("upload-descripcion").value.trim();
+      const tipo = document.getElementById("upload-tipo").value;
+      const status = document.getElementById("upload-status");
+
+      if (!archivo || !descripcion) {
+        status.textContent = "Completá la foto y la descripción.";
+        status.style.color = "#ff4444";
+        return;
+      }
+
+      status.textContent = "Subiendo imagen...";
+      status.style.color = "#aaa";
+
+      try {
+        const formData = new FormData();
+        formData.append("file", archivo);
+        formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        const imagenUrl = data.secure_url;
+
+        await addDoc(collection(db, "trabajos"), {
+          imagenUrl,
+          descripcion,
+          tipo,
+          fecha: serverTimestamp()
+        });
+
+        status.textContent = "¡Trabajo publicado correctamente!";
+        status.style.color = "#4caf50";
+        document.getElementById("upload-foto").value = "";
+        document.getElementById("upload-descripcion").value = "";
+        cargarTrabajos();
+      } catch (e) {
+        status.textContent = "Error al subir. Intentá de nuevo.";
+        status.style.color = "#ff4444";
+        console.error(e);
+      }
+    });
+
+    // TOGGLE ADMIN
+    document.getElementById("btn-admin-toggle").addEventListener("click", () => {
+      const section = document.getElementById("admin-section");
+      section.style.display = section.style.display === "none" ? "block" : "none";
+    });
+
+    cargarTrabajos();
+  </script>
+
+</body>
+</html>
