@@ -248,6 +248,34 @@
       .contacto-content { grid-template-columns: 1fr; gap: 2rem; }
       .hero { padding: 7rem 1.5rem 3rem; }
       .admin-item { flex-wrap: wrap; }
+
+      /* Carrusel Horizontal de Galería en Móvil */
+      /* En desktop se mantiene el grid, en móvil se scrollea horizontalmente */
+      .galeria-wrapper { padding: 3rem 0; }
+      .galeria-grid {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 1rem;
+        padding: 0 1.5rem 1.5rem;
+        scrollbar-width: none;
+      }
+
+      /* Esconde la barra de scroll en móvil */
+      .galeria-grid::-webkit-scrollbar { display: none; }
+
+      /* Cada card ocupa casi toda la pantalla para el efecto carrusel */
+      .trabajo-card {
+        flex: 0 0 80vw;
+        scroll-snap-align: center;
+        max-width: 320px;
+      }
+
+      /* Título de sección en móvil con padding */
+      .galeria-wrapper .seccion-titulo,
+      .galeria-wrapper .seccion-linea { padding-left: 1.5rem; }
     }
   </style>
 </head>
