@@ -174,6 +174,7 @@
     footer { background: var(--gris-oscuro); border-top: 1px solid #1E1E1E; padding: 2rem; text-align: center; }
     footer p { color: var(--gris-texto); font-size: 0.85rem; }
     footer a { color: var(--naranja); text-decoration: none; }
+    footer { display: flex; justify-content: space-between; align-items: center; }
 
     /* Estilos del Panel de Administración */
     #admin-section { display: none; background: var(--gris-oscuro); border-top: 2px solid var(--naranja); }
@@ -238,7 +239,7 @@
     .edit-foto-x:hover { background: #cc0000; }
 
     /* Botón Admin Flotante */
-    #btn-admin-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--gris-medio); color: var(--gris-texto); border: 1px solid #333; font-size: 0.75rem; padding: 0.5rem 0.8rem; cursor: pointer; z-index: 200; font-family: 'Inter', sans-serif; }
+    #btn-admin-toggle { position: static; background: var(--gris-medio); color: var(--gris-texto); border: 1px solid #333; font-size: 0.75rem; padding: 0.5rem 0.8rem; cursor: pointer; z-index: 200; font-family: 'Inter', sans-serif; }
     #btn-logout { display: none; background: transparent; color: var(--gris-texto); border: 1px solid #333; font-size: 0.8rem; padding: 0.4rem 0.8rem; cursor: pointer; font-family: 'Inter', sans-serif; }
 
     /* Responsive para Móvil */
@@ -341,10 +342,13 @@
       </div>
     </div>
   </section>
+ 
 
   <!-- Footer Page Settings -->
+  <!-- Botón Flotante para Acceder al Panel Admin -->
   <footer>
     <p>© 2026 Body Extreme Cars Detailing · Total Coat Costa Rica · Instagram <a href="https://www.instagram.com/totalcoatcr/" target="_blank">@totalcoatcr</a></p>
+    <button id="btn-admin-toggle">Admin</button>
   </footer>
 
   <!-- Panel de Credenciales de Administración -->
@@ -445,8 +449,7 @@
     </div>
   </div>
 
-  <!-- Botón Flotante para Acceder al Panel Admin -->
-  <button id="btn-admin-toggle">Admin</button>
+
 
   <!-- Firebase SDK - Siempre al final del body para que el HTML ya exista -->
   <script type="module">
