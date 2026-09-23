@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Body Extreme Cars Detailing | Total Coat Costa Rica</title>
+  <!-- Favicon de la Página -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <!-- Estilos Globales de la Página -->
@@ -601,11 +603,30 @@
     // ==========================================
     // Subida de Nuevo Trabajo con Múltiples Fotos
     // ==========================================
+
+    // Función de Validación de Fotos - Verifica tamaño máximo 10MB y formatos permitidos
+    function validarFotos(archivos) {
+      const MAX_MB = 10;
+      const MAX_BYTES = MAX_MB * 1024 * 1024;
+      const FORMATOS = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+      for (const archivo of archivos) {
+        if (!FORMATOS.includes(archivo.type)) {
+          return `El archivo "${archivo.name}" no es un formato válido. Solo se permiten JPG, PNG y WebP.`;
+        }
+        if (archivo.size > MAX_BYTES) {
+          return `El archivo "${archivo.name}" supera el límite de ${MAX_MB}MB. Comprimilo antes de subirlo.`;
+        }
+      }
+      return null;
+    }
+
     document.getElementById("btn-subir").addEventListener("click", async () => {
       const archivos = Array.from(document.getElementById("upload-fotos").files).slice(0, 10);
       const descripcion = document.getElementById("upload-descripcion").value.trim();
       const tipo = document.getElementById("upload-tipo").value;
       const status = document.getElementById("upload-status");
+      const btnSubir = document.getElementById("btn-subir");
 
       if (archivos.length === 0 || !descripcion) {
         status.textContent = "Seleccioná al menos una foto y escribí una descripción.";
@@ -613,6 +634,17 @@
         return;
       }
 
+      // Validación de Fotos antes de subir
+      const errorValidacion = validarFotos(archivos);
+      if (errorValidacion) {
+        status.textContent = errorValidacion;
+        status.style.color = "#ff4444";
+        return;
+      }
+
+      // Deshabilita el botón para evitar doble clic mientras procesa
+      btnSubir.disabled = true;
+      btnSubir.textContent = "Subiendo...";
       status.textContent = `Subiendo ${archivos.length} foto(s)...`;
       status.style.color = "#aaa";
 
@@ -625,6 +657,7 @@
           formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
           const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
           const data = await res.json();
+          if (!data.secure_url) throw new Error("Cloudinary no devolvió URL.");
           urls.push(data.secure_url);
         }
 
@@ -645,6 +678,10 @@
         status.textContent = "Error al subir. Intentá de nuevo.";
         status.style.color = "#ff4444";
         console.error(e);
+      } finally {
+        // Reactiva el botón siempre, haya error o no
+        btnSubir.disabled = false;
+        btnSubir.textContent = "Publicar trabajo";
       }
     });
 
@@ -751,6 +788,7 @@
       const tipo = document.getElementById("edit-tipo").value;
       const status = document.getElementById("edit-status");
       const archivosNuevos = Array.from(document.getElementById("edit-fotos-nuevas").files);
+      const btnGuardar = document.getElementById("btn-guardar-edit");
 
       if (!descripcion) {
         status.textContent = "La descripción no puede estar vacía.";
@@ -758,6 +796,19 @@
         return;
       }
 
+      // Validación de Fotos Nuevas antes de subir
+      if (archivosNuevos.length > 0) {
+        const errorValidacion = validarFotos(archivosNuevos);
+        if (errorValidacion) {
+          status.textContent = errorValidacion;
+          status.style.color = "#ff4444";
+          return;
+        }
+      }
+
+      // Deshabilita el botón para evitar doble clic mientras procesa
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = "Guardando...";
       status.textContent = "Guardando cambios...";
       status.style.color = "#aaa";
 
@@ -776,6 +827,7 @@
           formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
           const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
           const data = await res.json();
+          if (!data.secure_url) throw new Error("Cloudinary no devolvió URL.");
           urlsNuevas.push(data.secure_url);
         }
 
@@ -800,6 +852,10 @@
         status.textContent = "Error al guardar.";
         status.style.color = "#ff4444";
         console.error(e);
+      } finally {
+        // Reactiva el botón siempre, haya error o no
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "Guardar cambios";
       }
     });
 
