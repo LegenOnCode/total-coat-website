@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDocsFromServer, getDocFromServer, setDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Configuración de Firebase del Proyecto
@@ -97,6 +97,64 @@ async function subirFoto(archivo) {
   if (!url) throw new Error("Cloudinary no devolvio una URL de imagen valida.");
   return url;
 }
+
+// La limpieza se hace después de guardar los cambios en Firestore.
+// Si no se puede confirmar el estado del servidor, no se borran imágenes.
+const claveLimpieza = () => `total-coat-limpieza:${auth.currentUser?.uid || ""}`;
+function pendientesLimpieza() {
+  try { const v = JSON.parse(localStorage.getItem(claveLimpieza()) || "[]"); return Array.isArray(v) ? v.filter(url => urlImagen(url)) : []; }
+  catch { return []; }
+}
+function guardarPendientes(urls) {
+  try { localStorage.setItem(claveLimpieza(), JSON.stringify([...new Set(urls)])); }
+  catch { console.warn("No se pudo conservar la lista de limpieza para otra sesión."); }
+  actualizarLimpieza();
+}
+function actualizarLimpieza() {
+  const n = pendientesLimpieza().length;
+  document.getElementById("btn-limpiar-fotos").hidden = n === 0;
+  document.getElementById("btn-limpiar-fotos").textContent = `Reintentar limpieza (${n})`;
+}
+async function limpiarFotos(urls) {
+  const pendientes = [...new Set([...pendientesLimpieza(), ...urls])];
+  if (!pendientes.length) return { pending: [], skipped: [] };
+  guardarPendientes(pendientes);
+  try {
+    // No borrar una URL que todavía esté referenciada por otra publicación.
+    const snapshot = await getDocsFromServer(collection(db, "trabajos"));
+    const usadas = new Set(snapshot.docs.flatMap(d => fotosDe(d.data())));
+    const candidatas = pendientes.filter(url => !usadas.has(url));
+    let restantes = [...candidatas], omitidas = [];
+    for (let i = 0; i < candidatas.length; i += 10) {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/.netlify/functions/cloudinary-delete", {
+        method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: candidatas.slice(i, i + 10) }), signal: AbortSignal.timeout(20000)
+      });
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data.deleted) || !Array.isArray(data.skipped)) throw new Error("No se pudo limpiar Cloudinary.");
+      omitidas.push(...data.skipped);
+      restantes = restantes.filter(url => !data.deleted.includes(url) && !data.skipped.includes(url));
+      guardarPendientes(restantes);
+    }
+    guardarPendientes(restantes);
+    return { pending: restantes, skipped: omitidas };
+  } catch {
+    return { pending: pendientesLimpieza(), skipped: [] };
+  }
+}
+function avisoLimpieza(resultado) {
+  let mensaje = "";
+  if (resultado.pending.length) mensaje += " Hay fotos pendientes de limpieza. Usá Reintentar limpieza.";
+  if (resultado.skipped.length) mensaje += " Las fotos anteriores al flujo firmado deben eliminarse manualmente en Cloudinary.";
+  return mensaje;
+}
+document.getElementById("btn-limpiar-fotos").addEventListener("click", async () => {
+  if (ocupado || !auth.currentUser) return;
+  bloquear(true);
+  try { const r = await limpiarFotos([]); alert(avisoLimpieza(r) || "Limpieza completada."); }
+  finally { bloquear(false); }
+});
 
 // Variable que guarda las fotos que se van a eliminar al editar
 let fotosAEliminar = [];
@@ -234,11 +292,13 @@ onAuthStateChanged(auth, user => {
   const loginPanel = document.getElementById("login-panel");
   const btnLogout = document.getElementById("btn-logout");
   if (user) {
+    actualizarLimpieza();
     loginPanel.style.display = "none";
     adminPanel.style.display = "block";
     btnLogout.style.display = "inline-block";
     cargarListaAdmin();
   } else {
+    document.getElementById("btn-limpiar-fotos").hidden = true;
     loginPanel.style.display = "block";
     adminPanel.style.display = "none";
     btnLogout.style.display = "none";
@@ -324,20 +384,23 @@ document.getElementById("btn-subir").addEventListener("click", async () => {
   status.textContent = `Subiendo ${archivos.length} foto(s)...`;
   status.style.color = "#aaa";
 
+  const urls = [];
+  const referencia = doc(collection(db, "trabajos"));
+  let guardado = false;
   try {
-    const urls = [];
     for (let i = 0; i < archivos.length; i++) {
       status.textContent = `Subiendo foto ${i + 1} de ${archivos.length}...`;
       urls.push(await subirFoto(archivos[i]));
     }
 
-    await addDoc(collection(db, "trabajos"), {
+    await setDoc(referencia, {
       imagenes: urls,
       descripcion,
       tipo,
       fecha: serverTimestamp()
     });
 
+    guardado = true;
     status.textContent = "¡Trabajo publicado correctamente!";
     status.style.color = "#4caf50";
     document.getElementById("upload-fotos").value = "";
@@ -345,7 +408,15 @@ document.getElementById("btn-subir").addEventListener("click", async () => {
     await cargarTrabajos();
     await cargarListaAdmin();
   } catch (e) {
-    status.textContent = e.message || "Error al subir. Intentá de nuevo.";
+    let detalle = "";
+    if (!guardado && urls.length) {
+      try {
+        const estado = await getDocFromServer(referencia);
+        if (estado.exists()) { detalle = " El trabajo aparece guardado; recargá la lista antes de intentar de nuevo."; }
+        else { detalle = avisoLimpieza(await limpiarFotos(urls)); }
+      } catch { guardarPendientes([...pendientesLimpieza(), ...urls]); detalle = " No se pudo comprobar el guardado; las fotos quedan pendientes de revisión y limpieza."; }
+    }
+    status.textContent = (e.message || "Error al subir. Intentá de nuevo.") + detalle;
     status.style.color = "#ff4444";
     console.error(e);
   } finally {
@@ -379,6 +450,7 @@ async function cargarListaAdmin() {
       const editar = elemento("button", "btn-editar", "Editar");
       const eliminar = elemento("button", "btn-danger", "Eliminar");
       editar.dataset.id = eliminar.dataset.id = docSnap.id;
+      eliminar._imagenes = imagenes;
       acciones.append(editar, eliminar);
       item.append(imagen(imagenes[0], data.descripcion), info, acciones);
 
@@ -431,10 +503,13 @@ async function cargarListaAdmin() {
     lista.querySelectorAll(".btn-danger").forEach(btn => {
       btn.addEventListener("click", async () => {
         if (ocupado || !auth.currentUser) return;
-        if (!confirm("¿Seguro que querés eliminar esta publicación?")) return;
+        if (!confirm("¿Eliminar esta publicación y sus fotos del flujo firmado de Cloudinary? Esta acción no se puede deshacer.")) return;
         bloquear(true);
         try {
           await deleteDoc(doc(db, "trabajos", btn.dataset.id));
+          const limpieza = await limpiarFotos(btn._imagenes || []);
+          const aviso = avisoLimpieza(limpieza);
+          if (aviso) alert("Publicación eliminada." + aviso);
           if (document.getElementById("edit-id").value === btn.dataset.id) {
             document.getElementById("edit-panel").style.display = "none";
             fotosAEliminar = [];
@@ -497,9 +572,11 @@ document.getElementById("btn-guardar-edit").addEventListener("click", async () =
   status.textContent = "Guardando cambios...";
   status.style.color = "#aaa";
 
+  const urlsNuevas = [];
+  const eliminadas = [...fotosAEliminar];
+  let guardado = false;
   try {
     // Sube las fotos nuevas si las hay
-    const urlsNuevas = [];
     for (let i = 0; i < archivosNuevos.length; i++) {
       status.textContent = `Subiendo foto nueva ${i + 1} de ${archivosNuevos.length}...`;
       urlsNuevas.push(await subirFoto(archivosNuevos[i]));
@@ -516,6 +593,10 @@ document.getElementById("btn-guardar-edit").addEventListener("click", async () =
 
     await updateDoc(doc(db, "trabajos", id), { descripcion, tipo, imagenes: imagenesFinales });
 
+    guardado = true;
+    const limpieza = await limpiarFotos(eliminadas);
+    const aviso = avisoLimpieza(limpieza);
+    if (aviso) alert("Cambios guardados." + aviso);
     status.textContent = "¡Guardado correctamente!";
     status.style.color = "#4caf50";
     fotosAEliminar = [];
@@ -523,7 +604,12 @@ document.getElementById("btn-guardar-edit").addEventListener("click", async () =
     await cargarListaAdmin();
     await cargarTrabajos();
   } catch (e) {
-    status.textContent = e.message || "Error al guardar.";
+    let detalle = "";
+    if (!guardado && urlsNuevas.length) {
+      // Consultar todas las publicaciones en el servidor antes de quitar nuevas imágenes.
+      detalle = avisoLimpieza(await limpiarFotos(urlsNuevas));
+    }
+    status.textContent = (e.message || "Error al guardar.") + detalle;
     status.style.color = "#ff4444";
     console.error(e);
   } finally {
