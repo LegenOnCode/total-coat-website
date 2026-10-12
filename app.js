@@ -47,6 +47,13 @@ function fotosDe(data) {
   const fotos = Array.isArray(data.imagenes) ? data.imagenes : [data.imagenUrl];
   return fotos.map(urlImagen).filter(Boolean);
 }
+function trabajosPorFecha(snapshot) {
+  const fecha = doc => {
+    const valor = doc.data().fecha;
+    return typeof valor?.toMillis === "function" ? valor.toMillis() : 0;
+  };
+  return [...snapshot.docs].sort((a, b) => fecha(b) - fecha(a) || a.id.localeCompare(b.id));
+}
 let ocupado = false;
 let controlesBloqueados = [];
 function bloquear(valor) {
@@ -90,7 +97,7 @@ async function cargarTrabajos() {
       return;
     }
     galeria.innerHTML = "";
-    snapshot.forEach(docSnap => {
+    trabajosPorFecha(snapshot).forEach(docSnap => {
       const data = docSnap.data();
       const imagenes = fotosDe(data);
       if (imagenes.length === 0) return;
@@ -120,36 +127,87 @@ async function cargarTrabajos() {
 // Modal de Fotos al hacer click en un trabajo
 // ==========================================
 let focoAnterior = null;
+let fotosVisor = [];
+let indiceFoto = 0;
+let descripcionVisor = "";
+let overflowAnterior = "";
+let fondoModal = [];
+const overlayFotos = document.getElementById("modal-overlay");
+function mostrarFoto() {
+  const img = imagen(fotosVisor[indiceFoto], descripcionVisor);
+  img.loading = "eager";
+  document.getElementById("modal-fotos").replaceChildren(img);
+  document.getElementById("foto-contador").textContent = `Foto ${indiceFoto + 1} de ${fotosVisor.length}`;
+  document.getElementById("foto-anterior").disabled = fotosVisor.length < 2;
+  document.getElementById("foto-siguiente").disabled = fotosVisor.length < 2;
+}
+function avanzarFoto(paso) {
+  if (!fotosVisor.length) return;
+  indiceFoto = (indiceFoto + paso + fotosVisor.length) % fotosVisor.length;
+  mostrarFoto();
+}
 function abrirModal(data, imagenes) {
+  if (!imagenes.length) return;
   focoAnterior = document.activeElement;
-  document.getElementById("modal-titulo").textContent = data.descripcion;
+  fotosVisor = [...imagenes];
+  indiceFoto = 0;
+  descripcionVisor = String(data.descripcion ?? "Foto del trabajo");
+  document.getElementById("modal-titulo").textContent = descripcionVisor;
   document.getElementById("modal-tipo").textContent = data.tipo || "Detailing";
-  const cont = document.getElementById("modal-fotos");
-  cont.replaceChildren(...imagenes.map(url => imagen(url, data.descripcion)));
-  document.getElementById("modal-overlay").classList.add("activo");
+  mostrarFoto();
+  fondoModal = Array.from(document.body.children)
+    .filter(nodo => nodo !== overlayFotos && nodo.tagName !== "SCRIPT")
+    .map(nodo => [nodo, nodo.inert]);
+  fondoModal.forEach(([nodo]) => { nodo.inert = true; });
+  overlayFotos.classList.add("activo");
+  overflowAnterior = document.body.style.overflow;
   document.body.style.overflow = "hidden";
   document.getElementById("modal-cerrar").focus();
 }
-
 function cerrarModal() {
-  document.getElementById("modal-overlay").classList.remove("activo");
-  document.body.style.overflow = "";
+  if (!overlayFotos.classList.contains("activo")) return;
+  overlayFotos.classList.remove("activo");
+  document.body.style.overflow = overflowAnterior;
+  fondoModal.forEach(([nodo, previo]) => { nodo.inert = previo; });
+  fondoModal = [];
+  document.getElementById("modal-fotos").replaceChildren();
+  fotosVisor = [];
   if (focoAnterior?.isConnected) focoAnterior.focus();
 }
-document.getElementById("modal-overlay").addEventListener("keydown", e => {
-  if (e.key === "Escape") cerrarModal();
-  if (e.key === "Tab") { e.preventDefault(); document.getElementById("modal-cerrar").focus(); }
-});
-
-document.getElementById("modal-cerrar").addEventListener("click", () => {
-  cerrarModal();
-});
-
-document.getElementById("modal-overlay").addEventListener("click", (e) => {
-  if (e.target === document.getElementById("modal-overlay")) {
-    cerrarModal();
+overlayFotos.addEventListener("keydown", e => {
+  if (e.key === "Escape") { e.preventDefault(); cerrarModal(); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); avanzarFoto(-1); }
+  if (e.key === "ArrowRight") { e.preventDefault(); avanzarFoto(1); }
+  if (e.key === "Tab") {
+    const controles = Array.from(overlayFotos.querySelectorAll("button:not(:disabled)"));
+    const primero = controles[0], ultimo = controles[controles.length - 1];
+    if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo.focus(); }
+    else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
   }
 });
+document.getElementById("foto-anterior").addEventListener("click", () => avanzarFoto(-1));
+document.getElementById("foto-siguiente").addEventListener("click", () => avanzarFoto(1));
+document.getElementById("modal-cerrar").addEventListener("click", cerrarModal);
+overlayFotos.addEventListener("click", e => { if (e.target === overlayFotos) cerrarModal(); });
+
+// Menú móvil: enlaces, Escape y cambio a escritorio cierran el menú.
+const botonMenu = document.getElementById("nav-toggle");
+const enlacesMenu = document.getElementById("nav-links");
+function cerrarMenu() {
+  enlacesMenu.classList.remove("abierto");
+  botonMenu.setAttribute("aria-expanded", "false");
+}
+botonMenu.addEventListener("click", () => {
+  const abierto = enlacesMenu.classList.toggle("abierto");
+  botonMenu.setAttribute("aria-expanded", String(abierto));
+});
+enlacesMenu.querySelectorAll("a").forEach(enlace => enlace.addEventListener("click", cerrarMenu));
+document.querySelector("nav").addEventListener("keydown", e => {
+  if (e.key === "Escape" && enlacesMenu.classList.contains("abierto")) {
+    cerrarMenu(); botonMenu.focus();
+  }
+});
+matchMedia("(min-width: 769px)").addEventListener("change", e => { if (e.matches) cerrarMenu(); });
 
 // ==========================================
 // Autenticación del Administrador
@@ -293,7 +351,7 @@ async function cargarListaAdmin() {
       return;
     }
     lista.innerHTML = "";
-    snapshot.forEach(docSnap => {
+    trabajosPorFecha(snapshot).forEach(docSnap => {
       const data = docSnap.data();
       const imagenes = fotosDe(data);
       const item = document.createElement("div");

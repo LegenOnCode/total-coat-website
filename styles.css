@@ -276,3 +276,23 @@
       .modal-contenido { padding: 1rem; }
       footer { flex-wrap: wrap; gap: 1rem; }
     }
+
+/* Navegación móvil y visor de imágenes completas */
+.nav-toggle { display: none; border: 1px solid #555; background: var(--gris-medio); color: var(--blanco); padding: .55rem .85rem; font: inherit; cursor: pointer; }
+.modal-titulo { padding-right: 2rem; }
+.modal-fotos { display: block; }
+.modal-fotos img { width: 100%; height: min(55vh, 550px); object-fit: contain; background: var(--negro); }
+.visor-controles { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: 1rem; }
+.visor-boton { border: 1px solid #555; background: var(--gris-medio); color: var(--blanco); padding: .65rem .85rem; font: inherit; cursor: pointer; }
+.visor-boton:hover { border-color: var(--naranja); }
+.visor-boton:disabled { cursor: default; }
+#foto-contador { color: var(--gris-texto); text-align: center; font-size: .85rem; }
+@media (max-width: 768px) {
+  nav { flex-wrap: wrap; gap: .75rem; padding: .85rem 1rem; }
+  .nav-toggle { display: block; margin-left: auto; }
+  .nav-links { order: 4; flex-basis: 100%; flex-direction: column; gap: 0; }
+  .nav-links.abierto { display: flex; }
+  .nav-links a { display: block; padding: .7rem .25rem; }
+  .modal-fotos img { height: 48vh; }
+  .visor-boton { font-size: .85rem; padding: .6rem; }
+}

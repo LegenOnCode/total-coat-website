@@ -17,7 +17,8 @@
   <!-- Barra de Navegación Principal -->
   <nav>
     <a href="#" class="nav-logo">TOTAL<span>COAT</span></a>
-    <ul class="nav-links">
+    <button type="button" class="nav-toggle" id="nav-toggle" aria-controls="nav-links" aria-expanded="false">Menú</button>
+    <ul class="nav-links" id="nav-links">
       <li><a href="#servicios">Servicios</a></li>
       <li><a href="#galeria">Trabajos</a></li>
       <li><a href="#contacto">Contacto</a></li>
@@ -82,6 +83,11 @@
       <h3 class="modal-titulo" id="modal-titulo"></h3>
       <span class="modal-tipo" id="modal-tipo"></span>
       <div class="modal-fotos" id="modal-fotos"></div>
+      <div class="visor-controles">
+        <button type="button" class="visor-boton" id="foto-anterior" aria-label="Foto anterior">← Anterior</button>
+        <p id="foto-contador" role="status" aria-live="polite"></p>
+        <button type="button" class="visor-boton" id="foto-siguiente" aria-label="Foto siguiente">Siguiente →</button>
+      </div>
     </div>
   </div>
 
