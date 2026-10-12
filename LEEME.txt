@@ -4,6 +4,13 @@ REQUISITO
 La versión anterior con subidas firmadas ya está funcionando en Netlify.
 Se usan las mismas seis variables existentes y el mismo preset Signed.
 No cambiar ni volver a crear claves, variables o preset.
+La función de borrado consulta Firestore por REST con el mismo ID token de Firebase
+que verifica la autorización por UID. No requiere nuevas credenciales, API keys ni
+cuentas de servicio. Usa FIREBASE_PROJECT_ID y la base (default), como la web.
+Las reglas de Firestore deben permitir al administrador listar toda la colección
+trabajos. No se deben abrir permisos adicionales a usuarios no autorizados.
+Si las reglas o una política del proyecto rechazan la consulta, la limpieza queda
+pendiente: comprobar la configuración en Firebase, sin pegar secretos en el chat.
 
 INSTALACIÓN
 Copiar todos los archivos y carpetas del ZIP dentro de D:\Total-Coat-Git.
@@ -27,7 +34,18 @@ COMPORTAMIENTO
 La publicación se actualiza o elimina primero en Firestore; después se limpian fotos.
 Cancelar la edición no borra imágenes.
 Si falla una subida o un guardado, se intenta limpiar las fotos nuevas sin referencias.
-Se consulta Firestore desde el servidor antes de limpiar para evitar borrar URLs usadas.
+El navegador conserva su consulta a Firestore como protección adicional.
+La función de Netlify también consulta toda la colección trabajos antes de borrar,
+leyendo imagenes e imagenUrl y comparando el identificador del activo de Cloudinary.
+Usa documents.list con páginas de hasta 100 documentos y sigue nextPageToken hasta
+agotarlo, incluso si una página intermedia está vacía. No borra antes de completar
+todas las páginas. Si falla cualquier página o se repite un token, conserva los
+pendientes y responde 503. El timeout de 8 segundos cubre todo el recorrido.
+Protege referencias con distinta versión, transformación o extensión de la URL.
+Si la consulta falla, expira, se rechaza o devuelve datos inesperados, la función
+responde 503 y no llama a Cloudinary. Las fotos quedan pendientes para reintentar.
+Las referencias encontradas también se devuelven como pending, nunca como skipped
+(skipped se reserva para imágenes fuera del formato autorizado de borrado).
 Si no se puede comprobar el guardado, no se borran fotos a ciegas.
 Si Cloudinary falla, se conserva una lista de limpieza en este navegador y cuenta.
 Aparece Reintentar limpieza para volver a intentarlo.
@@ -42,16 +60,32 @@ identificarla para la limpieza automática; requiere revisión manual en Cloudin
 La lista pendiente se guarda localmente: borrar los datos del navegador la elimina.
 Si se bloquea el almacenamiento local, no se conserva entre sesiones.
 No hay una transacción conjunta entre Firebase y Cloudinary. Evitar que dos
-administradores editen simultáneamente la misma publicación. Para una cola central
+administradores editen simultáneamente la misma publicación. La comprobación no
+garantiza protección ante cambios simultáneos: después de leer Firestore y antes
+del borrado, otra escritura puede volver a referenciar el activo. Para cerrar ese
+intervalo haría falta coordinar las escrituras y el ciclo de borrado en el servidor.
+La consulta completa aumenta las lecturas y el tiempo según crece la colección;
+si supera el timeout de 8 segundos, no se borra ninguna foto de esa solicitud.
+Para una cola central
 resistente al cierre del navegador haría falta una fase adicional en el servidor.
 No borrar manualmente imágenes que aún se usan en otras publicaciones.
 
 VALIDACIÓN
-Sintaxis, build, referencias HTML y pruebas con servicios simulados verificadas.
-Se probaron permisos, límites, firma de borrado, restricción de identificadores,
-protección de URLs publicadas y reintentos ante errores.
+Pruebas reproducibles: npm test (en PowerShell con scripts deshabilitados:
+npm.cmd test). Requieren Node >=22; no requieren dependencias instaladas, variables
+reales ni red. Usan código real con Firebase Authentication y HTTP simulados.
+Cubren sesión ausente/inválida, UID no autorizado, referencias en ambos campos,
+variantes de URL, colección vacía, fallos de consulta, restricciones de borrado,
+referencias solo en la segunda página, errores en páginas posteriores y recorrido
+de páginas vacías con token sin borrar prematuramente,
+firma, límites y conservación de pendientes. No validan las reglas reales ni
+el funcionamiento de los servicios publicados.
+Comprobaciones locales de esta mejora: npm test, node --check para JavaScript,
+npm run build y git diff --check. Las pruebas se incluyen en tests/.
 No se ejecutaron eliminaciones reales ni se accedió a tus servicios.
 La prueba real debe realizarse con el trabajo nuevo de prueba, después del despliegue.
 
 REFERENCIA
 https://cloudinary.com/documentation/image_upload_api_reference#destroy_by_public_id
+https://firebase.google.com/docs/firestore/use-rest-api
+https://firebase.google.com/docs/firestore/reference/rest/v1/projects.databases.documents/list
