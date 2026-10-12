@@ -15,7 +15,7 @@ const firebaseConfig = {
 
 // Configuración de Cloudinary para Subida de Imágenes
 const CLOUDINARY_CLOUD_NAME = "blagc6d0";
-const CLOUDINARY_UPLOAD_PRESET = "total_coat_preset";
+// El preset y las claves se configuran en Netlify, no en el navegador.
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -68,9 +68,26 @@ function bloquear(valor) {
   }
 }
 async function subirFoto(archivo) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Iniciá sesión para subir fotos.");
+  const token = await user.getIdToken();
+  const respuesta = await fetch("/.netlify/functions/cloudinary-sign", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(20000)
+  });
+  const firma = await respuesta.json().catch(() => null);
+  if (!respuesta.ok) {
+    throw new Error(firma?.error || "No se pudo autorizar la subida. Revisá la configuración de Netlify.");
+  }
+  if (firma.cloudName !== CLOUDINARY_CLOUD_NAME || !firma.apiKey || !firma.signature || !firma.params) {
+    throw new Error("La autorización de subida no es válida.");
+  }
   const formData = new FormData();
   formData.append("file", archivo);
-  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  for (const [nombre, valor] of Object.entries(firma.params)) formData.append(nombre, valor);
+  formData.append("api_key", firma.apiKey);
+  formData.append("signature", firma.signature);
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
     method: "POST", body: formData, signal: AbortSignal.timeout(120000)
   });
@@ -328,7 +345,7 @@ document.getElementById("btn-subir").addEventListener("click", async () => {
     await cargarTrabajos();
     await cargarListaAdmin();
   } catch (e) {
-    status.textContent = "Error al subir. Intentá de nuevo.";
+    status.textContent = e.message || "Error al subir. Intentá de nuevo.";
     status.style.color = "#ff4444";
     console.error(e);
   } finally {
@@ -506,7 +523,7 @@ document.getElementById("btn-guardar-edit").addEventListener("click", async () =
     await cargarListaAdmin();
     await cargarTrabajos();
   } catch (e) {
-    status.textContent = "Error al guardar.";
+    status.textContent = e.message || "Error al guardar.";
     status.style.color = "#ff4444";
     console.error(e);
   } finally {

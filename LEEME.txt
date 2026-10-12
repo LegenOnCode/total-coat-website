@@ -1,0 +1,97 @@
+TOTAL COAT: SUBIDAS A CLOUDINARY AUTORIZADAS POR FIREBASE
+
+Esta versión conserva el menú móvil, el visor y el orden de trabajos.
+El navegador obtiene una firma desde una función de Netlify antes de subir cada foto.
+La función verifica el token de Firebase y comprueba el UID contra ADMIN_UIDS.
+El API Secret permanece en Netlify. No incluye credenciales reales en estos archivos.
+
+1. COPIAR LOS ARCHIVOS
+Extraer todo el contenido de este ZIP en D:\Total-Coat-Git, conservando las carpetas.
+Reemplazar index.html, styles.css y app.js; agregar los archivos nuevos.
+No crear una carpeta adicional entre la raíz del repositorio y netlify.toml.
+Si ya hay package.json, netlify.toml o .gitignore personalizados, combinar la configuración,
+no borrar configuraciones existentes. El ZIP original no incluía esos archivos.
+
+2. VARIABLES EN NETLIFY (ANTES DEL PUSH)
+Abrir el proyecto en Netlify -> Project configuration -> Environment variables.
+Crear estas variables disponibles para Functions, en el contexto de Production:
+
+FIREBASE_PROJECT_ID = total-coat-website
+ADMIN_UIDS = HkZF2KOK4KWt9RhCkZU2ZeLrJrz1
+CLOUDINARY_CLOUD_NAME = blagc6d0
+CLOUDINARY_UPLOAD_PRESET = total_coat_preset
+CLOUDINARY_API_KEY = valor de API Key de Cloudinary
+CLOUDINARY_API_SECRET = valor de API Secret de Cloudinary
+
+Cloudinary -> Settings -> API Keys: copiar API Key y API Secret directamente a Netlify.
+Marcar API Secret como secreto si Netlify ofrece esa opción.
+No pegarlo en app.js, netlify.toml, GitHub, capturas ni el chat.
+Las variables de funciones se configuran en Netlify, no en netlify.toml.
+Para varios administradores, usar UID1,UID2,UID3 sin comillas.
+La lista de Firestore y ADMIN_UIDS deben incluir los mismos administradores.
+
+3. SUBIR Y DESPLEGAR
+En CMD:
+cd /d "D:\Total-Coat-Git"
+git status
+git add index.html styles.css app.js package.json netlify.toml .gitignore netlify/functions/cloudinary-sign.js scripts/build.cjs LEEME.txt
+git commit -m "Autoriza subidas a Cloudinary con Firebase y Netlify"
+git push
+
+Netlify instala firebase-admin y ejecuta npm run build.
+El build copia solo index.html, styles.css y app.js a public/.
+Netlify publica public/ y despliega la función desde netlify/functions/.
+En Netlify, comprobar que el despliegue de producción terminó correctamente.
+Si hay un Build command, Base directory o Publish directory previo diferente,
+asegurarse de que usa la raíz del repo, npm run build y public, respectivamente.
+
+4. ACTIVAR EL MODO FIRMADO
+Después del despliegue correcto:
+Cloudinary -> Upload presets -> total_coat_preset -> General -> Signing mode: Signed -> Save.
+Mantener Allowed formats: jpg,png,webp y la sobrescritura desactivada.
+Hasta este cambio, el preset sigue aceptando subidas sin firma fuera de la página.
+No crear otro preset Unsigned para el mismo flujo.
+Si hay otros presets Unsigned, revisar si se usan; cerrar este no cierra los demás.
+Las fotos existentes permanecen en la galería.
+
+5. COMPROBAR EN LA PÁGINA PUBLICADA
+Recargar la página para cargar el nuevo app.js.
+Sin sesión: la galería debe seguir visible.
+Con la cuenta autorizada: publicar una foto, editar y eliminar el trabajo de prueba.
+Comprobar también la subida de fotos nuevas al editar.
+La eliminación de publicaciones aún no elimina los archivos de Cloudinary.
+Para comprobar el rechazo a otro usuario, usar una cuenta de prueba fuera de ADMIN_UIDS
+(si ya existe); no es necesario darle permisos de Firestore.
+Si aparece un error, conservar el mensaje y revisar el despliegue/variables de Netlify.
+
+6. USO LOCAL
+npx serve . sirve solo la página: no ejecuta la función de Netlify.
+Por eso la galería se puede ver con serve, pero las nuevas subidas requieren Netlify.
+Para probar el flujo completo localmente:
+npm install
+npx netlify-cli link
+npx netlify-cli dev
+Seleccionar el proyecto correcto cuando Netlify lo solicite.
+Las variables deben estar disponibles también en el contexto de desarrollo local.
+Usar la URL que muestre Netlify Dev. No guardar secretos en archivos rastreados por Git.
+
+7. AÑADIR O RETIRAR ADMINISTRADORES
+Agregar o quitar el UID en ADMIN_UIDS en Netlify y volver a desplegar para aplicarlo.
+Agregar o quitar también el UID en las reglas de Firestore y publicarlas.
+No basta con ocultar botones ni con crear una cuenta en Authentication.
+La verificación estándar del SDK comprueba firma y vencimiento del token; no consulta
+revocaciones ni el estado deshabilitado del usuario. Para retirar acceso a las subidas,
+quitar su UID de ADMIN_UIDS y desplegar, además de actualizar las reglas de Firestore.
+
+VALIDACIÓN REALIZADA
+Sintaxis JS y build verificados. Pruebas aisladas con SDK Firebase simulado:
+rechazo sin sesión, token inválido, usuario no autorizado, múltiples administradores,
+configuración ausente y parámetros de firma controlados por el servidor.
+La firma SHA-256 se comprobó con claves de prueba. No se accedió a tus servicios reales.
+Falta instalar/desplegar en tu Netlify y comprobar una subida real con el preset Signed.
+
+REFERENCIAS
+https://firebase.google.com/docs/auth/admin/verify-id-tokens
+https://cloudinary.com/documentation/authentication_signatures
+https://docs.netlify.com/build/functions/configuration/
+https://docs.netlify.com/build/functions/environment-variables/
